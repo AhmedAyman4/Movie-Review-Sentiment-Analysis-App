@@ -1,15 +1,5 @@
 import gradio as gr
 import pandas as pd
-import numpy as np
-from bs4 import BeautifulSoup
-from sklearn.model_selection import train_test_split
-from nltk.stem import PorterStemmer
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from collections import Counter
-from sklearn.model_selection import train_test_split
-lemmatizer = WordNetLemmatizer()
-stemmer = PorterStemmer()
 import re
 import nltk
 import joblib
@@ -17,10 +7,9 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
-
 # Download stopwords if not available
 nltk.download('stopwords')
-custom_stopwords = set(stopwords.words('english')) 
+
 # Paths to datasets
 train_path = r"E:\Projects\Sentiment Analysis Project DEPI\train_data.csv"
 test_path = r"E:\Projects\Sentiment Analysis Project DEPI\test_data.csv"
@@ -30,26 +19,12 @@ train_df = pd.read_csv(train_path)
 
 # Text preprocessing function
 def preprocess_text(text):
-    if isinstance(text, str):  # Ensure text is a string
-        ## REMOVE HTML
-        if "<" in text and ">" in text:
-            text = BeautifulSoup(text, "html.parser").get_text()
-        ## CLEANING
-        # Remove special characters
-        text = re.sub(r'\W+', ' ', text)  
-        # Remove digits
-        text = re.sub(r'\d+', '', text)
-        ## LOWERCASING
-        text = text.lower()
-        ## TOKENIZATION
-        words = text.split()
-        ## REMOVE STOPWORDS
-        words = [w for w in words if w not in custom_stopwords] 
-        ## APPLY LEMMATIZATION
-        words = [lemmatizer.lemmatize(w) for w in words]
-        ## RETURN CLEANED TEXT
-        return ' '.join(words)
-    return ""
+    text = text.lower()  # Convert to lowercase
+    text = re.sub(r'\W', ' ', text)  # Remove special characters
+    text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
+    stop_words = set(stopwords.words('english'))  # Load stopwords
+    text = ' '.join(word for word in text.split() if word not in stop_words)  # Remove stopwords
+    return text
 
 # Apply preprocessing
 train_df['cleaned_review'] = train_df['review'].astype(str).apply(preprocess_text)
