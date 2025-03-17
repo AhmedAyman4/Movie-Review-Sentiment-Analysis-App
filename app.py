@@ -31,8 +31,10 @@ def predict_sentiment_tensorflow(text):
     try:
         if not tokenizer or not model_tnsorflow:
             return "Error: Model or Tokenizer not loaded properly."
+
+        processed_text = preprocess_text(text)
         
-        sequence = tokenizer.texts_to_sequences([text])
+        sequence = tokenizer.texts_to_sequences([processed_text])
         padded_sequence = pad_sequences(sequence, maxlen=max_len, padding="pre")
         prediction = model_tnsorflow.predict(padded_sequence)[0]
         sentiment = "POSITIVE" if prediction[1] > 0.5 else "NEGATIVE"
