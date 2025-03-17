@@ -42,7 +42,7 @@ def predict_sentiment_tensorflow(text):
 
 # ---------------------- Load & Preprocess Dataset ----------------------
 # Paths to datasets
-train_path = r"E:\Projects\Sentiment Analysis Project DEPI\train_data.csv"
+train_path = r"train_data.csv"
 
 # Load training data
 train_df = pd.read_csv(train_path)
