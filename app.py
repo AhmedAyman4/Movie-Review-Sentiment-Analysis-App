@@ -1,65 +1,107 @@
 import gradio as gr
 import pandas as pd
+import numpy as np
 import re
 import nltk
 import joblib
+import pickle
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Download stopwords if not available
-nltk.download('stopwords')
+nltk.download("stopwords")
 
+# ---------------------- Load TensorFlow Model ----------------------
+try:
+    with open("tokenizer.pkl", "rb") as handle:
+        tokenizer = pickle.load(handle)
+    model_tnsorflow = load_model("best_model.keras")
+    max_len = 1128
+except Exception as e:
+    print(f"Error loading TensorFlow model or tokenizer: {e}")
+    tokenizer = None
+    model_tnsorflow = None
+
+# ---------------------- TensorFlow Sentiment Prediction ----------------------
+def predict_sentiment_tensorflow(text):
+    """Predict sentiment using the TensorFlow model."""
+    try:
+        if not tokenizer or not model_tnsorflow:
+            return "Error: Model or Tokenizer not loaded properly."
+        
+        sequence = tokenizer.texts_to_sequences([text])
+        padded_sequence = pad_sequences(sequence, maxlen=max_len, padding="pre")
+        prediction = model_tnsorflow.predict(padded_sequence)[0]
+        sentiment = "POSITIVE" if prediction[1] > 0.5 else "NEGATIVE"
+        return sentiment
+    except Exception as e:
+        return f"Error in prediction: {e}"
+
+# ---------------------- Load & Preprocess Dataset ----------------------
 # Paths to datasets
 train_path = r"E:\Projects\Sentiment Analysis Project DEPI\train_data.csv"
-test_path = r"E:\Projects\Sentiment Analysis Project DEPI\test_data.csv"
 
-# Load datasets
+# Load training data
 train_df = pd.read_csv(train_path)
 
-# Text preprocessing function
 def preprocess_text(text):
-    text = text.lower()  # Convert to lowercase
-    text = re.sub(r'\W', ' ', text)  # Remove special characters
-    text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
-    stop_words = set(stopwords.words('english'))  # Load stopwords
-    text = ' '.join(word for word in text.split() if word not in stop_words)  # Remove stopwords
+    """Preprocess text: lowercase, remove special characters, and stopwords."""
+    text = text.lower()
+    text = re.sub(r"\W", " ", text)  # Remove special characters
+    text = re.sub(r"\s+", " ", text).strip()  # Remove extra spaces
+    stop_words = set(stopwords.words("english"))
+    text = " ".join(word for word in text.split() if word not in stop_words)
     return text
 
-# Apply preprocessing
-train_df['cleaned_review'] = train_df['review'].astype(str).apply(preprocess_text)
+# Apply text preprocessing
+train_df["cleaned_review"] = train_df["review"].astype(str).apply(preprocess_text)
 
-# Train the model
-vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1,2))
-X_train_tfidf = vectorizer.fit_transform(train_df['cleaned_review'])
-y_train = train_df['sentiment']
+# ---------------------- Train Logistic Regression Model ----------------------
+vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
+X_train_tfidf = vectorizer.fit_transform(train_df["cleaned_review"])
+y_train = train_df["sentiment"]
 
-model = LogisticRegression(max_iter=500)
-model.fit(X_train_tfidf, y_train)
+model_lr = LogisticRegression(max_iter=500)
+model_lr.fit(X_train_tfidf, y_train)
 
-# Save the model and vectorizer
-joblib.dump(model, "sentiment_model.pkl")
+# Save model and vectorizer
+joblib.dump(model_lr, "sentiment_model.pkl")
 joblib.dump(vectorizer, "tfidf_vectorizer.pkl")
 
 # Load model and vectorizer for prediction
-model = joblib.load("sentiment_model.pkl")
+model_lr = joblib.load("sentiment_model.pkl")
 vectorizer = joblib.load("tfidf_vectorizer.pkl")
 
-# Gradio prediction function
-def predict_sentiment(review):
-    processed_review = preprocess_text(review)  # Preprocess input
-    review_tfidf = vectorizer.transform([processed_review])  # Convert to TF-IDF
-    prediction = model.predict(review_tfidf)[0]  # Get prediction
+# ---------------------- TF-IDF Logistic Regression Sentiment Prediction ----------------------
+def predict_sentiment_tfidf(text):
+    """Predict sentiment using the Logistic Regression model."""
+    processed_review = preprocess_text(text)
+    review_tfidf = vectorizer.transform([processed_review])
+    prediction = model_lr.predict(review_tfidf)[0]
     return f"Predicted Sentiment: {prediction}"
 
-# Gradio UI
-interface = gr.Interface(
-    fn=predict_sentiment,
-    inputs=gr.Textbox(label="Enter a Review"),
-    outputs=gr.Textbox(label="Sentiment Prediction"),
-    title="Movie Review Sentiment Analysis App",
-    description="Enter a review, and the model will predict if it's Positive, Negative, or Neutral."
-)
+# ---------------------- Sentiment Analysis Function ----------------------
+def analyze_sentiment(text, model_choice):
+    """Analyze sentiment using the selected model."""
+    if model_choice == "TF-IDF Logistic Regression":
+        return predict_sentiment_tfidf(text)
+    else:
+        return predict_sentiment_tensorflow(text)
+
+# ---------------------- Gradio UI ----------------------
+with gr.Blocks() as interface:
+    gr.Markdown("# Movie Review Sentiment Analysis App")
+    gr.Markdown("Enter a review, and the model will predict if it's Positive, Negative, or Neutral.")
+
+    model_choice = gr.Dropdown(["TF-IDF Logistic Regression", "TensorFlow Model"], label="Select Model")
+    text_input = gr.Textbox(label="Enter a Review")
+    output = gr.Textbox(label="Sentiment Prediction", interactive=False)
+
+    analyze_button = gr.Button("Analyze")
+    analyze_button.click(analyze_sentiment, inputs=[text_input, model_choice], outputs=output)
 
 # Launch the app
 interface.launch()
