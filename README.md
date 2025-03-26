@@ -24,8 +24,8 @@ This is a machine learning application that performs sentiment analysis on movie
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/movie-sentiment-analysis.git
-cd movie-sentiment-analysis
+git clone https://github.com/AhmedAyman4/Movie-Review-Sentiment-Analysis-App.git
+cd Movie-Review-Sentiment-Analysis-App
 ```
 
 2. Install required dependencies:
