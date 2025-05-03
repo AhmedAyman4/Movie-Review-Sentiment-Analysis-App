@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Review Sentiment Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            font-weight: 600;
+        }
+        .result-box {
+            min-height: 60px;
+            border-radius: 4px;
+            padding: 10px;
+            transition: background-color 0.3s;
+        }
+        .positive {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .negative {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .neutral {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            background-color: #e2e3e5;
+        }
+        .examples-card {
+            cursor: pointer;
+        }
+        .model-info {
+            font-size: 0.9rem;
+        }
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Movie Review Sentiment Analysis</h1>
+        <p class="text-center lead mb-4">Enter a review, and the model will predict if it's Positive, Negative, or Neutral.</p>
+        
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Analyze Review
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="modelSelect" class="form-label">Select Model</label>
+                            <select class="form-select" id="modelSelect">
+                                <option value="RoBERTa Model">RoBERTa Model</option>
+                                <option value="TensorFlow Model">TensorFlow Model</option>
+                                <option value="TF-IDF Logistic Regression">TF-IDF Logistic Regression</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reviewText" class="form-label">Enter a Review</label>
+                            <textarea class="form-control" id="reviewText" rows="5" placeholder="Type your review here..."></textarea>
+                        </div>
+                        <button class="btn btn-primary w-100" id="analyzeBtn">
+                            <span id="btnText">Analyze</span>
+                            <span id="loadingSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        Sentiment Prediction
+                    </div>
+                    <div class="card-body">
+                        <div id="resultBox" class="result-box">
+                            <p id="resultText">Results will appear here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card examples-card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#examplesCollapse" aria-expanded="false">
+                        Example Reviews
+                        <span class="float-end">▼</span>
+                    </div>
+                    <div class="collapse" id="examplesCollapse">
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a href="#" class="list-group-item list-group-item-action example-item">This movie was amazing, I loved every minute of it!</a>
+                                <a href="#" class="list-group-item list-group-item-action example-item">This was the worst movie I've ever seen, terrible acting and plot.</a>
+                                <a href="#" class="list-group-item list-group-item-action example-item">The movie was okay, nothing special but watchable.</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#modelsCollapse" aria-expanded="false">
+                        About the Models
+                        <span class="float-end">▼</span>
+                    </div>
+                    <div class="collapse" id="modelsCollapse">
+                        <div class="card-body model-info">
+                            <h5>Model Information</h5>
+                            <ul>
+                                <li><strong>TF-IDF Logistic Regression:</strong> A classical machine learning approach using term frequency-inverse document frequency features.</li>
+                                <li><strong>TensorFlow Model:</strong> A custom neural network trained on the training data.</li>
+                                <li><strong>RoBERTa Model:</strong> A state-of-the-art transformer model (cardiffnlp/twitter-roberta-base-sentiment-latest) from HuggingFace, fine-tuned for sentiment analysis on Twitter data.</li>
+                            </ul>
+                            <p>The RoBERTa model generally provides the most accurate sentiment predictions, especially for complex or nuanced text, but may be slower than the other models.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const reviewText = document.getElementById('reviewText');
+            const modelSelect = document.getElementById('modelSelect');
+            const resultBox = document.getElementById('resultBox');
+            const resultText = document.getElementById('resultText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const btnText = document.getElementById('btnText');
+            const exampleItems = document.querySelectorAll('.example-item');
+
+            // Toggle collapsible elements
+            document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(element => {
+                element.addEventListener('click', function() {
+                    const target = document.querySelector(this.getAttribute('data-bs-target'));
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    
+                    this.setAttribute('aria-expanded', !isExpanded);
+                    this.querySelector('.float-end').textContent = isExpanded ? '▼' : '▲';
+                    
+                    if (target.classList.contains('show')) {
+                        target.classList.remove('show');
+                    } else {
+                        target.classList.add('show');
+                    }
+                });
+            });
+
+            // Handle analyze button click
+            analyzeBtn.addEventListener('click', function() {
+                analyzeSentiment();
+            });
+
+            // Handle example item clicks
+            exampleItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    reviewText.value = this.textContent;
+                    analyzeSentiment();
+                    
+                    // Auto-collapse the examples section
+                    const examplesCollapse = document.getElementById('examplesCollapse');
+                    const examplesHeader = examplesCollapse.previousElementSibling;
+                    examplesCollapse.classList.remove('show');
+                    examplesHeader.setAttribute('aria-expanded', 'false');
+                    examplesHeader.querySelector('.float-end').textContent = '▼';
+                });
+            });
+
+            // Function to analyze sentiment
+            function analyzeSentiment() {
+                const review = reviewText.value.trim();
+                if (!review) {
+                    resultBox.className = 'result-box error';
+                    resultText.textContent = 'Please enter a review text';
+                    return;
+                }
+
+                // Show loading state
+                setLoadingState(true);
+
+                // Send API request
+                fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        review: review,
+                        model: modelSelect.value
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    setLoadingState(false);
+                    
+                    // Update result based on sentiment
+                    if (data.sentiment === 'POSITIVE') {
+                        resultBox.className = 'result-box positive';
+                    } else if (data.sentiment === 'NEGATIVE') {
+                        resultBox.className = 'result-box negative';
+                    } else if (data.sentiment === 'NEUTRAL') {
+                        resultBox.className = 'result-box neutral';
+                    } else {
+                        resultBox.className = 'result-box error';
+                    }
+                    
+                    resultText.textContent = data.message;
+                })
+                .catch(error => {
+                    setLoadingState(false);
+                    resultBox.className = 'result-box error';
+                    resultText.textContent = 'Error: ' + error.message;
+                });
+            }
+
+            function setLoadingState(isLoading) {
+                if (isLoading) {
+                    loadingSpinner.classList.remove('d-none');
+                    btnText.textContent = 'Analyzing...';
+                    analyzeBtn.disabled = true;
+                    resultBox.className = 'result-box loading';
+                    resultText.textContent = 'Analyzing sentiment...';
+                } else {
+                    loadingSpinner.classList.add('d-none');
+                    btnText.textContent = 'Analyze';
+                    analyzeBtn.disabled = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
