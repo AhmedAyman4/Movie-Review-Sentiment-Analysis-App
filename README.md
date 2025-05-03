@@ -144,11 +144,4 @@ docker build -t sentiment-analysis-flask .
 docker run -p 5000:5000 sentiment-analysis-flask
 ```
 
-## Further Improvements
 
-- Add user authentication
-- Implement rate limiting
-- Add batch processing capabilities
-- Store analysis results in a database
-- Add caching for better performance
-- Create API documentation with Swagger/OpenAPI
