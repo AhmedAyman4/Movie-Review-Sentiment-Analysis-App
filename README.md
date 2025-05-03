@@ -144,4 +144,8 @@ docker build -t sentiment-analysis-flask .
 docker run -p 5000:5000 sentiment-analysis-flask
 ```
 
+The API endpoints are:
 
+GET /: Web interface for sentiment analysis
+POST /analyze: API endpoint for sentiment analysis
+GET /health: Health check endpoint
