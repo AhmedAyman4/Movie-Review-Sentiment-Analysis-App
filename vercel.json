@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "flask_sentiment_app.py",
@@ -12,11 +11,4 @@
       "dest": "flask_sentiment_app.py"
     }
   ]
-}
-{
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
-  "ignoreCommand": "echo 'Skipping unnecessary files'"
 }
