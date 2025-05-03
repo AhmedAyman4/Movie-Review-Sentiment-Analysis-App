@@ -1,14 +1,14 @@
 {
+  "version": 2,
   "builds": [
-    {
-      "src": "flask_sentiment_app.py",
-      "use": "@vercel/python"
-    }
+    { "src": "api/tfidf.py", "use": "@vercel/python" },
+    { "src": "api/tensorflow.py", "use": "@vercel/python" },
+    { "src": "api/roberta.py", "use": "@vercel/python" }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "flask_sentiment_app.py"
-    }
+    { "src": "/analyze/tfidf", "dest": "/api/tfidf.py" },
+    { "src": "/analyze/tensorflow", "dest": "/api/tensorflow.py" },
+    { "src": "/analyze/roberta", "dest": "/api/roberta.py" },
+    { "src": "/(.*)", "dest": "/templates/index.html" }
   ]
 }
