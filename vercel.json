@@ -13,3 +13,10 @@
     }
   ]
 }
+{
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "ignoreCommand": "echo 'Skipping unnecessary files'"
+}
