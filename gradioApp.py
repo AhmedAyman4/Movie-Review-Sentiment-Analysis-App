@@ -2,6 +2,8 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 import re
+from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
 import nltk
 import joblib
 import pickle
@@ -31,7 +33,7 @@ try:
     with open("tokenizer.pkl", "rb") as handle:
         tokenizer = pickle.load(handle)
     model_tnsorflow = load_model("best_model.keras")
-    max_len = 1128
+    max_len = 1360
 except Exception as e:
     print(f"Error loading TensorFlow model or tokenizer: {e}")
     tokenizer = None
@@ -43,8 +45,10 @@ def predict_sentiment_tensorflow(text):
     try:
         if not tokenizer or not model_tnsorflow:
             return "Error: Model or Tokenizer not loaded properly."
+            
+        processed_text = preprocess_text(text)
         
-        sequence = tokenizer.texts_to_sequences([text])
+        sequence = tokenizer.texts_to_sequences([processed_text])
         padded_sequence = pad_sequences(sequence, maxlen=max_len, padding="pre")
         prediction = model_tnsorflow.predict(padded_sequence)[0]
         sentiment = "POSITIVE" if prediction[1] > 0.5 else "NEGATIVE"
@@ -87,13 +91,13 @@ train_path = r"train_data.csv"
 train_df = pd.read_csv(train_path)
 
 def preprocess_text(text):
-    """Preprocess text: lowercase, remove special characters, and stopwords."""
     text = text.lower()
-    text = re.sub(r"\W", " ", text)  # Remove special characters
-    text = re.sub(r"\s+", " ", text).strip()  # Remove extra spaces
+    text = re.sub(r"\W", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
     stop_words = set(stopwords.words("english"))
-    text = " ".join(word for word in text.split() if word not in stop_words)
-    return text
+    words = [word for word in text.split() if word not in stop_words]
+    words = [lemmatizer.lemmatize(word) for word in words]
+    return " ".join(words)
 
 # Apply text preprocessing
 train_df["cleaned_review"] = train_df["review"].astype(str).apply(preprocess_text)
