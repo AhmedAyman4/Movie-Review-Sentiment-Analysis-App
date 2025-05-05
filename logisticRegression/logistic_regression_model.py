@@ -93,7 +93,7 @@ def test_model_accuracy(test_df, model_lr=None, vectorizer=None):
 # Example usage
 if __name__ == "__main__":
     train_path = r"train_data.csv"
-    test_path = r"train_data.csv"  # Using train data as test for demonstration (ideally use separate test data)
+    test_path = r"test_data.csv"  
     
     # Load and preprocess data
     train_df, test_df = load_and_preprocess_data(train_path, test_path)
