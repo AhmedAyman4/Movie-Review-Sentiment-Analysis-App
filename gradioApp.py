@@ -2,8 +2,6 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 import re
-from nltk.stem import WordNetLemmatizer
-lemmatizer = WordNetLemmatizer()
 import nltk
 import joblib
 import pickle
@@ -33,7 +31,7 @@ try:
     with open("tokenizer.pkl", "rb") as handle:
         tokenizer = pickle.load(handle)
     model_tnsorflow = load_model("best_model.keras")
-    max_len = 1360
+    max_len = 1128
 except Exception as e:
     print(f"Error loading TensorFlow model or tokenizer: {e}")
     tokenizer = None
@@ -45,10 +43,8 @@ def predict_sentiment_tensorflow(text):
     try:
         if not tokenizer or not model_tnsorflow:
             return "Error: Model or Tokenizer not loaded properly."
-            
-        processed_text = preprocess_text(text)
         
-        sequence = tokenizer.texts_to_sequences([processed_text])
+        sequence = tokenizer.texts_to_sequences([text])
         padded_sequence = pad_sequences(sequence, maxlen=max_len, padding="pre")
         prediction = model_tnsorflow.predict(padded_sequence)[0]
         sentiment = "POSITIVE" if prediction[1] > 0.5 else "NEGATIVE"
@@ -83,48 +79,35 @@ def predict_sentiment_roberta(text):
     except Exception as e:
         return f"Error in RoBERTa prediction: {e}"
 
-# ---------------------- Load & Preprocess Dataset ----------------------
-# Paths to datasets
-train_path = r"train_data.csv"
+# ----------------------  Preprocess Dataset ----------------------
 
-# Load training data
-train_df = pd.read_csv(train_path)
 
 def preprocess_text(text):
+    """Preprocess text: lowercase, remove special characters, and stopwords."""
     text = text.lower()
-    text = re.sub(r"\W", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\W", " ", text)  # Remove special characters
+    text = re.sub(r"\s+", " ", text).strip()  # Remove extra spaces
     stop_words = set(stopwords.words("english"))
-    words = [word for word in text.split() if word not in stop_words]
-    words = [lemmatizer.lemmatize(word) for word in words]
-    return " ".join(words)
+    text = " ".join(word for word in text.split() if word not in stop_words)
+    return text
 
-# Apply text preprocessing
-train_df["cleaned_review"] = train_df["review"].astype(str).apply(preprocess_text)
 
-# ---------------------- Train Logistic Regression Model ----------------------
-vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
-X_train_tfidf = vectorizer.fit_transform(train_df["cleaned_review"])
-y_train = train_df["sentiment"]
-
-model_lr = LogisticRegression(max_iter=500)
-model_lr.fit(X_train_tfidf, y_train)
-
-# Save model and vectorizer
-joblib.dump(model_lr, "sentiment_model.pkl")
-joblib.dump(vectorizer, "tfidf_vectorizer.pkl")
-
+# ---------------------- TF-IDF Logistic Regression Sentiment Prediction ----------------------
 # Load model and vectorizer for prediction
 model_lr = joblib.load("sentiment_model.pkl")
 vectorizer = joblib.load("tfidf_vectorizer.pkl")
 
-# ---------------------- TF-IDF Logistic Regression Sentiment Prediction ----------------------
+
 def predict_sentiment_tfidf(text):
-    """Predict sentiment using the Logistic Regression model."""
+    """Predict sentiment using the Logistic Regression model and return confidence score."""
     processed_review = preprocess_text(text)
     review_tfidf = vectorizer.transform([processed_review])
+    
     prediction = model_lr.predict(review_tfidf)[0]
-    return f"Predicted Sentiment: {prediction}"
+    probabilities = model_lr.predict_proba(review_tfidf)[0]
+    confidence = max(probabilities)
+
+    return f"Predicted Sentiment: {prediction} (Confidence: {confidence:.2f})"
 
 # ---------------------- Sentiment Analysis Function ----------------------
 def analyze_sentiment(text, model_choice):
