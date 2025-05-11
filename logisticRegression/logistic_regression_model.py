@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import re
-from nltk.stem import WordNetLemmatizer
+import re # Regular Expressions
+from nltk.stem import WordNetLemmatizer # For converting words to their base forms.
 lemmatizer = WordNetLemmatizer()
 import nltk
 import joblib
@@ -16,7 +16,7 @@ nltk.download("stopwords")
 # ---------------------- Load & Preprocess Dataset ----------------------
 def preprocess_text(text):
     text = text.lower()
-    text = re.sub(r"\W", " ", text)
+    text = re.sub(r"\W", " ", text) # Removing non-word characters (\W) and extra spaces.
     text = re.sub(r"\s+", " ", text).strip()
     stop_words = set(stopwords.words("english"))
     words = [word for word in text.split() if word not in stop_words]
