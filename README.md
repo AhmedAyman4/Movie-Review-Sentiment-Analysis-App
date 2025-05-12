@@ -57,6 +57,47 @@ Ensure the following model files are in the same directory as app.py:
 - best_model.keras
 - tokenizer.pkl
 
+## 🧠 TensorFlow Neural Network
+
+A simple and efficient sentiment classification model built with Keras.
+
+### Model Overview
+- **Layers**: `Embedding` → `SpatialDropout1D` → `GlobalAveragePooling1D` → `Dropout` → `Dense (softmax)`
+- **Loss**: `categorical_crossentropy`
+- **Optimizer**: `Adam (lr=0.0005)`
+- **Callbacks**: `EarlyStopping`, `ReduceLROnPlateau`, `ModelCheckpoint`
+- **Validation Accuracy**: ~90%
+- **Model File**: `best_model.keras`
+
+This model is available for selection through the web interface.
+
+## 🧮 TF-IDF + Logistic Regression
+
+A traditional machine learning model that uses term frequency–inverse document frequency (TF-IDF) to convert text into numerical features, followed by Logistic Regression for classification.
+
+### Model Overview
+- **Vectorizer**: `TF-IDF` (`sklearn.feature_extraction.text.TfidfVectorizer`)
+- **Classifier**: `LogisticRegression`
+- **Accuracy**: ~88% on validation data
+- **Model Files**:
+  - `sentiment_model.pkl`
+  - `tfidf_vectorizer.pkl`
+
+This model is fast and lightweight, suitable for quick inference.
+
+## 🤖 RoBERTa Transformer (Hugging Face)
+
+A state-of-the-art transformer-based model for sentiment analysis using Hugging Face's `transformers` library.
+
+### Model Overview
+- **Base Model**: `roberta-base` from Hugging Face
+- **Tokenization & Inference**: `AutoTokenizer`, `AutoModelForSequenceClassification`
+- **Accuracy**: ~92% on test data (using pretrained weights)
+- **Note**: The model is automatically downloaded at runtime from Hugging Face Hub.
+
+This model offers the best performance and understanding of context, recommended for high-quality predictions.
+
+
 Note: The RoBERTa model will be downloaded from HuggingFace when running the app for the first time.
 
 ### 3. Directory Structure
