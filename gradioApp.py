@@ -6,6 +6,8 @@ import nltk
 import joblib
 import pickle
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from tensorflow.keras.models import load_model
@@ -43,8 +45,9 @@ def predict_sentiment_tensorflow(text):
     try:
         if not tokenizer or not model_tnsorflow:
             return "Error: Model or Tokenizer not loaded properly."
+        processed_text = preprocess_text(text)
         
-        sequence = tokenizer.texts_to_sequences([text])
+        sequence = tokenizer.texts_to_sequences([processed_text])
         padded_sequence = pad_sequences(sequence, maxlen=max_len, padding="pre")
         prediction = model_tnsorflow.predict(padded_sequence)[0]
         sentiment = "POSITIVE" if prediction[1] > 0.5 else "NEGATIVE"
@@ -88,8 +91,9 @@ def preprocess_text(text):
     text = re.sub(r"\W", " ", text)  # Remove special characters
     text = re.sub(r"\s+", " ", text).strip()  # Remove extra spaces
     stop_words = set(stopwords.words("english"))
-    text = " ".join(word for word in text.split() if word not in stop_words)
-    return text
+    words = [word for word in text.split() if word not in stop_words]
+    words = [lemmatizer.lemmatize(word) for word in words]
+    return " ".join(words)
 
 
 # ---------------------- TF-IDF Logistic Regression Sentiment Prediction ----------------------
