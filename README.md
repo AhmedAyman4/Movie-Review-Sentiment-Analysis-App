@@ -5,6 +5,15 @@ This Flask application serves a sentiment analysis service for movie reviews usi
 2. Custom TensorFlow Neural Network
 3. HuggingFace RoBERTa Transformer Model
 
+# Movie Review Sentiment Analysis Gradio Dash
+In addition to the Flask interface, the app is now also available via:
+- ✅ **Gradio UI on Hugging Face Spaces**
+- ✅ **Dash Interactive Dashboard on Hugging Face Spaces**
+
+You can **select any of the three models** in the web or API interface.
+link [ https://huggingface.co/spaces/ahmed-ayman/Sentiment-Analysis ]
+
+
 ## Project Structure
 
 ```
