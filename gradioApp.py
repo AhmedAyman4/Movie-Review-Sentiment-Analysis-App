@@ -17,6 +17,9 @@ import torch
 
 # Download stopwords if not available
 nltk.download("stopwords")
+nltk.download("wordnet")
+nltk.download("omw-1.4")
+
 
 # ---------------------- Load HuggingFace RoBERTa Model ----------------------
 try:
